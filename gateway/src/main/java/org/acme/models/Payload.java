@@ -23,7 +23,7 @@ public class Payload extends PanacheEntity {
     public String phone;
     public String fileName;
     public String email;
-    public String BucketName;
+    public String bucketName;
     @CreationTimestamp
     @JsonFormat(pattern = "dd/MM/yyyy hh:mm:ss")
     public Date createdAt;

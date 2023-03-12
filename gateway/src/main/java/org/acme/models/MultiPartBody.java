@@ -43,4 +43,5 @@ public class MultiPartBody {
     @Email(message = "Email must be a valid one")
     @NotNull(message = "Email must not be provided")
     private String email;
+
 }
