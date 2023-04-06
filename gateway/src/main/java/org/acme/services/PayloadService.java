@@ -1,10 +1,15 @@
 package org.acme.services;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.ObjectWriteResponse;
 import io.minio.UploadObjectArgs;
 import org.acme.exceptions.StorageException;
 import org.acme.models.Payload;
+import org.jboss.logging.Logger;
+import org.acme.models.dto.PayloadDTO;
 import org.acme.utils.StorageClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -15,18 +20,48 @@ public class PayloadService {
     @Inject
     StorageClient storageClient;
 
-    public void sendObjectToStorage(Payload payload, File file) throws StorageException {
+    @Inject
+    Logger logger;
+
+    @ConfigProperty(name = "bucket.name")
+    private String bucketName;
+
+    private void makeBucket() throws Exception {
+        BucketExistsArgs bucketExistsArgs = BucketExistsArgs
+                .builder()
+                .bucket(bucketName)
+                .build();
+
+        if (storageClient.getMinioClient().bucketExists(bucketExistsArgs)) {
+            logger.info("Bucket " + bucketName + " already exist");
+        }
+        else {
+            logger.info("Bucket " + bucketName + " not exist");
+            MakeBucketArgs makeBucketArgs = MakeBucketArgs.builder().bucket(bucketName).build();
+            storageClient.getMinioClient().makeBucket(makeBucketArgs);
+            logger.info("Bucket " + bucketName + " created");
+        }
+    }
+    public PayloadDTO sendObjectToStorage(Payload payload, File file) throws Exception {
+
+        ObjectWriteResponse response = null;
+        this.makeBucket();
         try {
             UploadObjectArgs uploadObjectArgs = UploadObjectArgs.builder()
-                    .bucket("teste")
+                    .bucket(bucketName)
                     .object(payload.fileName)
                     .filename(file.getAbsolutePath())
                     .contentType("application/pdf")
                     .build();
-            ObjectWriteResponse response = storageClient.getMinioClient().uploadObject(uploadObjectArgs);
+            response = storageClient.getMinioClient().uploadObject(uploadObjectArgs);
             System.out.println(response.versionId());
         } catch (Exception e) {
-            throw new StorageException("Error upload file to storage. Please try again");
+            throw new StorageException("Error upload file to storage. Please try again -- " + e.getMessage());
         }
+
+        return PayloadDTO.builder()
+                .bucketName(response.bucket())
+                .fileNAme(payload.fileName)
+                .build();
     }
 }

@@ -30,7 +30,7 @@ public class MultiPartBody {
     @FormParam("phone")
     @PartType(MediaType.TEXT_PLAIN)
     @NotNull(message = "Phone number must not be provided")
-    @Pattern(regexp = "'/^(?:(?:\\+|00)?(55)\\s?)?(?:\\(?([1-9][0-9])\\)?\\s?)?(?:((?:9\\d|[2-9])\\d{3})\\-?(\\d{4}))$/'")
+    // @Pattern(regexp = "'/^(?:(?:\\+|00)?(55)\\s?)?(?:\\(?([1-9][0-9])\\)?\\s?)?(?:((?:9\\d|[2-9])\\d{3})\\-?(\\d{4}))$/'")
     private String phone;
 
     @FormParam("fileName")

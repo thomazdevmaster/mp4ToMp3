@@ -11,18 +11,18 @@ public class StorageClient {
 
 
     @ConfigProperty(name = "minio.secretkey")
-    String secretKey;
+    private String secretKey;
 
 
     @ConfigProperty(name = "minio.username")
-    String rootname;
+    private String rootname;
 
 
     @ConfigProperty(name = "minio.endpoint")
-    String endpoint;
+    private String endpoint;
 
     public MinioClient getMinioClient() {
-
+        endpoint = "http://localhost:9000";
         MinioClient minioClient = MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(rootname, secretKey)
