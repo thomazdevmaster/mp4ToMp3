@@ -38,3 +38,8 @@ nb-configuration.xml
 
 # Local environment
 .env
+
+
+# python
+**/fastAPI/env
+fastAPI/__pycache__
