@@ -1,21 +1,22 @@
 version: '3'
 
 services:
-  quarkus-service:
-    image: quarkus/gateway-jvm
-    build:
-      context: .
-      dockerfile: src/main/docker/Dockerfile.jvm
-    ports:
-      - "8088:8081"
-    networks:
-      - auth-network
-    env_file:
-      - .env      
-    depends_on:
-      - dbapp
-      - keycloak
-      - minio
+
+#  quarkus-service:
+#    image: quarkus/gateway-jvm
+#    build:
+#      context: .
+#      dockerfile: src/main/docker/Dockerfile.jvm
+#    ports:
+#      - "8088:8081"
+#    networks:
+#      - auth-network
+#    env_file:
+#      - .env      
+#    depends_on:
+#      - dbapp
+#      - keycloak
+#      - minio
   dbapp:
     image: mysql:8.0
     volumes:
