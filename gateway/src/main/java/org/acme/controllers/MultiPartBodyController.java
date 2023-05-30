@@ -7,6 +7,7 @@ import org.acme.models.Status;
 import org.acme.models.dto.PayloadDTO;
 import org.acme.services.MessageService;
 import org.acme.services.PayloadService;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -36,6 +37,7 @@ public class MultiPartBodyController {
         payloadToPersist.setStatus(Status.converting);
         PayloadDTO payloadDTO = payloadService.sendObjectToStorage(payloadToPersist, data.getFile());
         messageService.send(payloadDTO);
+        payloadToPersist.setBucketName(payloadDTO.getBucketName());
         payloadToPersist.persist();
         logger.info("Payload created " + payloadToPersist);
     }
