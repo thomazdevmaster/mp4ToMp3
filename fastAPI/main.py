@@ -29,8 +29,9 @@ async def convert_mp4ToMp3(file: str):
     file_name = "/tmp/downloads/" + file
     file_name_converted = file_name.removesuffix("mp4") + "mp3"
 
+    endpoint = "minio:9000"
 
-    client = Minio(endpoint=get_endpoint(), 
+    client = Minio(endpoint=endpoint, 
                    access_key = env.get("MINIO_ROOT_USER"), 
                    secret_key = env.get("MINIO_ROOT_PASSWORD"), 
                    secure=False
@@ -59,6 +60,19 @@ async def convert_mp4ToMp3(file: str):
 
         logger.info("Successo no envio")
 
+        logger.info("Apagando arquivos temporários . . .")
+
+        try:
+            folder_path = "/tmp/downloads"
+            for file_name in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, file_name)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            logger.info("Todos os arquivos foram removidos com sucesso.")
+        except OSError as e:
+            logger.error(f"Erro ao remover os arquivos: {e}")
+
+
         return {"message": "Conversão finalizada e arquivo salvo no MinIO"}
     except Exception as e:
         logger.error(f"Erro durante a conversão e salvamento no MinIO: {str(e)}")
@@ -71,12 +85,3 @@ def video_to_audio(video_file, audio_file):
     audio_clip.close()
     video_clip.close()
     logger.info("Finalizando mp4 para mp3")
-
-
-def get_endpoint() -> str:
-    try:
-        response = requests.head("http://minio:9000")
-        if response.status_code == requests.codes.ok: 
-            return "minio:9000"
-    except:
-        return "localhost:9000"
