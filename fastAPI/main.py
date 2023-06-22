@@ -1,10 +1,15 @@
-from fastapi import FastAPI
+import io
+import os
+from fastapi import FastAPI, UploadFile, File
 import logging
 from minio import Minio
+from minio.error import S3Error
 from dotenv import load_dotenv
 from moviepy.editor import VideoFileClip
 
 from os import environ as env
+
+import requests
 
 load_dotenv()  # Carrega as variáveis de ambiente do arquivo .env
 
@@ -18,25 +23,46 @@ logger = logging.getLogger(__name__)
 async def root():
     return {"message": "Hello World dfgdfg"}
 
-@app.get("/convert")
-async def convert_mp4ToMp3():
-    logger.info("Iniciando conversão do arquivo mp4")
-    file_name = "/tmp/downloads/teste.mp4"
-    file_name_converted = "/tmp/downloads/teste.mp3"
+@app.get("/convert/{file}")
+async def convert_mp4ToMp3(file: str):
+    logger.info(f"Iniciando conversão do arquivo {file}")
+    file_name = "/tmp/downloads/" + file
+    file_name_converted = file_name.removesuffix("mp4") + "mp3"
 
 
-    client = Minio(endpoint="minio:9000", 
+    client = Minio(endpoint=get_endpoint(), 
                    access_key = env.get("MINIO_ROOT_USER"), 
                    secret_key = env.get("MINIO_ROOT_PASSWORD"), 
                    secure=False
                    )
     
-    client.fget_object(env.get("BUCKET_NAME"), "ledzepellin.mp4" ,file_name)
-    video_to_audio(file_name, file_name_converted)
+    try:
+        client.fget_object(env.get("BUCKET_NAME"), file, file_name)
+        video_to_audio(file_name, file_name_converted)
 
-    logger.info("Success")
-    
-    return{"message": "Conversão finalizada"}
+        logger.info(f"Arquivo {file_name_converted} gerado com {os.path.getsize(file_name_converted)} bytes")
+
+        # Upload the converted file to MinIO
+        logger.info("Enviando arquivo para o bucket " + env.get("BUCKET_NAME"))
+        with open(file_name_converted, "rb") as f:
+            file_data = f.read()
+        
+        stream = io.BytesIO(file_data)  # Cria um objeto BytesIO com os dados do arquivo
+        
+        client.put_object(
+            bucket_name=env.get("BUCKET_NAME"),
+            object_name="convertidos/" + file_name_converted.split("/")[-1],
+            data=stream,
+            length=len(file_data),
+            content_type="audio/mpeg"
+        )
+
+        logger.info("Successo no envio")
+
+        return {"message": "Conversão finalizada e arquivo salvo no MinIO"}
+    except Exception as e:
+        logger.error(f"Erro durante a conversão e salvamento no MinIO: {str(e)}")
+        return {"message": "Ocorreu um erro durante a conversão e salvamento no MinIO"}
 
 def video_to_audio(video_file, audio_file):
     video_clip = VideoFileClip(video_file)
@@ -45,3 +71,12 @@ def video_to_audio(video_file, audio_file):
     audio_clip.close()
     video_clip.close()
     logger.info("Finalizando mp4 para mp3")
+
+
+def get_endpoint() -> str:
+    try:
+        response = requests.head("http://minio:9000")
+        if response.status_code == requests.codes.ok: 
+            return "minio:9000"
+    except:
+        return "localhost:9000"
