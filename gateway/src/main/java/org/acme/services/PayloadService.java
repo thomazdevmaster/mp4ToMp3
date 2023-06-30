@@ -61,7 +61,7 @@ public class PayloadService {
 
         return PayloadDTO.builder()
                 .bucketName(response.bucket())
-                .fileNAme(payload.fileName)
+                .fileName(payload.fileName)
                 .build();
     }
 }

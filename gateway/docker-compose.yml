@@ -2,57 +2,67 @@ version: '3'
 
 services:
 
-#  quarkus-service:
-#    image: quarkus/gateway-jvm
-#    build:
-#      context: .
-#      dockerfile: src/main/docker/Dockerfile.jvm
-#    ports:
-#      - "8088:8081"
-#    networks:
-#      - auth-network
-#    env_file:
-#      - .env      
-#    depends_on:
-#      - dbapp
-#      - keycloak
-#      - minio
-  mp4-converter:
-    image: thomazfsj/mp4-converter:0.0.1
+  quarkus-service:
+    image: docker.io/quarkus/gateway-jvm
+    # build:
+    #   context: .
+    #   dockerfile: src/main/docker/Dockerfile.jvm
+    ports:
+      - "8081:8081"
+    networks:
+      - auth-network
     env_file:
-      - .env
+      - .env.prod      
+    depends_on:
+      - dbapp
+      - keycloak
+      - minio
+
+  converter:
+    image: thomazfsj/mp4-converter:0.0.1
     ports:
       - 8000:8000
+    volumes:
+      - ./fastAPI:/app
+    env_file:
+      - .env.prod
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - auth-network
+
   dbapp:
     image: mysql:8.0
     volumes:
       - mysql_data:/var/lib/mysql
     env_file:
-      - .env
+      - .env.prod
     networks:
       - auth-network
     ports:
       - "3306:3306"
+
   postgres:
     image: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
-      - .env
+      - .env.prod
     networks:
       - auth-network
+
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
     container_name: dbk-keycloak
     hostname: keycloak
     env_file:
-      - .env
+      - .env.prod
     ports:
-      - "8180:8080"
+      - "8080:8080"
     depends_on:
       - postgres
     networks:
       - auth-network
+
   minio:
     image: quay.io/minio/minio
     ports:
@@ -63,13 +73,14 @@ services:
     networks:
       - auth-network
     env_file:
-      - .env
+      - .env.prod
     command: server /data --console-address ":9090"
-  rabbitmq3:
+
+  rabbitmq:
     container_name: "rabbitmq"
     image: rabbitmq:3.8-management-alpine
     env_file:
-      - .env
+      - .env.prod
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
@@ -80,15 +91,16 @@ services:
       - '15672:15672'
     networks:
       - auth-network
-  krakend:
-    image: devopsfaith/krakend:2.0.6
-    ports:
-      - "9091:9091"
-      - "8085:8080"
-    volumes:
-      - ./krakend.json:/etc/krakend/krakend.json
-    networks:
-      - auth-network
+
+  # krakend:
+  #   image: devopsfaith/krakend:2.0.6
+  #   ports:
+  #     - "9091:9091"
+  #     - "8085:8080"
+  #   volumes:
+  #     - ./krakend.json:/etc/krakend/krakend.json
+  #   networks:
+  #     - auth-network
 
 networks:
   auth-network:

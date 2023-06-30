@@ -22,7 +22,7 @@ public class StorageClient {
     private String endpoint;
 
     public MinioClient getMinioClient() {
-        endpoint = "http://localhost:9000";
+        endpoint = "http://localhost:9000"; //remover
         MinioClient minioClient = MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(rootname, secretKey)

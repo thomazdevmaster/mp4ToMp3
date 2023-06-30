@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PayloadDTO {
     private String bucketName;
-    private String fileNAme;
+    private String fileName;
 }

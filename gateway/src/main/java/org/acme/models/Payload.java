@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Entity;
 import java.util.Date;
+import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -16,6 +17,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Payload extends PanacheEntity {
+    private String idApp;
     public String userName;
     public NotificationType notificationType;
     public String phone;
@@ -32,6 +34,7 @@ public class Payload extends PanacheEntity {
 
     public static Payload multiPartToPayload(MultiPartBody multiPartiBody) {
         return Payload.builder()
+                .idApp(UUID.randomUUID().toString())
                 .userName(multiPartiBody.getUserName())
                 .notificationType(multiPartiBody.getNotificationType())
                 .phone(multiPartiBody.getPhone())
